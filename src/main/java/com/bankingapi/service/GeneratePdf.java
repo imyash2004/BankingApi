@@ -39,9 +39,13 @@ public class GeneratePdf {
             throw new RuntimeException(e);
         }
         SimpleDateFormat fDate= new SimpleDateFormat("dd/MM/yyyy");
-        Date fromDate=fDate.parse(user.getFromDate());
+        if(user.getFromDate()!=null){
+        Date fromDate=fDate.parse(user.getFromDate());}
+        Date fromDate=null;
         SimpleDateFormat tDate= new SimpleDateFormat("dd/MM/yyyy");
-        Date toDate=fDate.parse(user.getToDate());
+        if(user.getToDate()!=null){
+        Date toDate=tDate.parse(user.getToDate());}
+        Date toDate=null;
 
         System.out.println(fromDate);
         System.out.println(toDate);
@@ -68,11 +72,13 @@ public class GeneratePdf {
         int i=0;
         for(String[] x:beans){
             Transaction t=new Transaction(x[0],x[1],x[2]);
-            System.out.println(t.getUserId());
-            System.out.println(t.getAmount());
-            System.out.println(t.getDate());
-            if( (fromDate==null || fromDate.before(t.getDate()) || fromDate.equals(t.getDate()))
-                    &&(toDate==null || toDate.after(t.getDate()))&&
+            //System.out.println(t.getUserId());
+            //System.out.println(t.getAmount());
+            //System.out.println(t.getDate());
+            //System.out.println(t.getDate().after(fromDate));
+           // System.out.println(t.getDate().before(toDate));
+            if( (fromDate==null || t.getDate().after(fromDate) || fromDate.equals(t.getDate()))
+                    &&(toDate==null || t.getDate().before(toDate))&&
                     user.getUserid().equals(t.getUserId()) )
             {
                 System.out.println("yash");

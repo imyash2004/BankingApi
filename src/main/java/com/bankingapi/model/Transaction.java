@@ -24,8 +24,12 @@ public class Transaction {
     }
 
     public Date  getDate() throws ParseException {
+        if(date==null){
+            return null;
+        }
         SimpleDateFormat d= new SimpleDateFormat("dd/MM/yyyy");
-        return d.parse(date);
+        Date d1= d.parse(date);
+        return d1;
     }
 
     public void setDate(Date date) {
