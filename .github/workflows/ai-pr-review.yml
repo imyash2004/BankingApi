@@ -35,7 +35,7 @@ jobs:
 
           if [ -z "$changed_files" ]; then
             echo "No files changed."
-            echo "::set-output name=review_result::No changes detected."
+            echo "review_result=No changes detected." >> $GITHUB_ENV
           else
             # Convert changed files to array and pass to OpenAI action
             changed_files_array=($changed_files)
@@ -51,7 +51,7 @@ jobs:
                 "max_tokens": 150
               }')
 
-            echo "::set-output name=review_result::$(echo $response | jq -r '.choices[0].text')"
+            echo "review_result=$(echo $response | jq -r '.choices[0].text')" >> $GITHUB_ENV
           fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -62,4 +62,4 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ## Automated PR Review by OpenAI
-            ${{ steps.files.outputs.review_result }}
+            ${{ env.review_result }}
