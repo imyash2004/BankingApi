@@ -25,25 +25,33 @@ jobs:
       - name: Get changed files
         id: files
         run: |
-          # Get the base and head commit from GitHub context
           base_commit=${{ github.event.pull_request.base.sha }}
           head_commit=${{ github.sha }}
 
           echo "Base commit: $base_commit"
           echo "Head commit: $head_commit"
 
-          # Get the list of changed files in the PR using GitHub context
           changed_files=$(git diff --name-only $base_commit $head_commit)
 
           if [ -z "$changed_files" ]; then
             echo "No files changed."
             echo "::set-output name=review_result::No changes detected."
           else
-            # Convert changed files to array and pass to Python script
+            # Convert changed files to array and pass to OpenAI action
             changed_files_array=($changed_files)
-          
-            # Run Python script for review, passing the OpenAI API key from secrets
-            python3 pr-review/review_pr.py "${changed_files_array[@]}"
+
+            # Use OpenAI action for review
+            echo "Running OpenAI review..."
+            response=$(curl -s -X POST https://api.openai.com/v1/completions \
+              -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "model": "text-davinci-003",
+                "prompt": "Review the following files:\n'${changed_files_array[@]}'",
+                "max_tokens": 150
+              }')
+
+            echo "::set-output name=review_result::$(echo $response | jq -r '.choices[0].text')"
           fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
