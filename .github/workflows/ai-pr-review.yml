@@ -8,8 +8,8 @@ jobs:
   ai_pr_reviewer:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -18,9 +18,8 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Dependencies
-        run: |
-          pip install -r chat-gpt-pr-reviewer/.ai/io/nerdythings/requirements.txt
+      - name: Install dependencies
+        run: pip install -r chat-gpt-pr-reviewer/.ai/io/nerdythings/requirements.txt
 
       - name: Run Reviewer Script
         env:
@@ -36,9 +35,9 @@ jobs:
         run: |
           python chat-gpt-pr-reviewer/.ai/io/nerdythings/github_reviewer.py
 
-      - name: Upload Result as an Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload result as an artifact
+        uses: actions/upload-artifact@v4  # Updated version
         with:
-          name: AI-Review-Result
+          name: AI-requests
           path: output.txt
           retention-days: 1
