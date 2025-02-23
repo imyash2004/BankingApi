@@ -25,6 +25,7 @@ jobs:
       - name: Get changed files
         id: files
         run: |
+          # Get the base and head commit from GitHub context
           base_commit=${{ github.event.pull_request.base.sha }}
           head_commit=${{ github.sha }}
 
