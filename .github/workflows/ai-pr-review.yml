@@ -9,8 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the repository
+      - name: Checkout the repository with full history
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch full commit history to ensure proper comparison of commits
 
       - name: Set up Python environment
         uses: actions/setup-python@v2
@@ -25,8 +27,15 @@ jobs:
       - name: Get changed files
         id: files
         run: |
+          # Get the base and head commit from the GitHub context
+          base_commit=${{ github.event.pull_request.base.sha }}
+          head_commit=${{ github.sha }}
+
+          echo "Base commit: $base_commit"
+          echo "Head commit: $head_commit"
+
           # Get the list of changed files in the PR using GitHub context
-          changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          changed_files=$(git diff --name-only $base_commit $head_commit)
 
           if [ -z "$changed_files" ]; then
             echo "No files changed."
