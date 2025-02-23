@@ -9,10 +9,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the repository with full history
+      - name: Checkout the repository
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Fetch full commit history to ensure proper comparison of commits
 
       - name: Set up Python environment
         uses: actions/setup-python@v2
@@ -27,7 +25,6 @@ jobs:
       - name: Get changed files
         id: files
         run: |
-          # Get the base and head commit from the GitHub context
           base_commit=${{ github.event.pull_request.base.sha }}
           head_commit=${{ github.sha }}
 
@@ -43,9 +40,9 @@ jobs:
           else
             # Convert changed files to array and pass to Python script
             changed_files_array=($changed_files)
-
+          
             # Run Python script for review, passing the OpenAI API key from secrets
-            python3 review_pr.py "${changed_files_array[@]}"
+            python3 pr-review/review_pr.py "${changed_files_array[@]}"
           fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
