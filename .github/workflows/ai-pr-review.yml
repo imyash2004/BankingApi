@@ -25,21 +25,19 @@ jobs:
       - name: Get changed files
         id: files
         run: |
-          echo "FILES_CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})" >> $GITHUB_ENV
+          # Get the list of changed files in the PR
+          changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
 
-      - name: Run PR review script
-        id: openai_review
-        run: |
-          changed_files=${{ env.FILES_CHANGED }}
           if [ -z "$changed_files" ]; then
             echo "No files changed."
             echo "::set-output name=review_result::No changes detected."
           else
             # Convert changed files to array and pass to Python script
             changed_files_array=($changed_files)
-          
+
             # Run Python script for review, passing the OpenAI API key from secrets
             python3 review_pr.py "${changed_files_array[@]}"
+          fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
@@ -49,4 +47,4 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ## Automated PR Review by OpenAI
-            ${{ steps.openai_review.outputs.review_result }}
+            ${{ steps.files.outputs.review_result }}
