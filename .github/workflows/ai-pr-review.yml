@@ -1,44 +1,52 @@
-name: Pull Request ChatGPT Review
+name: PR Reviewer with OpenAI
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  ai_pr_reviewer:
+  pr-reviewer:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.8'
 
       - name: Install dependencies
-        run: pip install -r chat-gpt-pr-reviewer/.ai/io/nerdythings/requirements.txt
-
-      - name: Run Reviewer Script
-        env:
-          GITHUB_HEAD_REF: ${{ github.head_ref }}
-          GITHUB_BASE_REF: ${{ github.base_ref }}
-          CHATGPT_KEY: ${{ secrets.CHATGPT_KEY }}
-          CHATGPT_MODEL: ${{ secrets.CHATGPT_MODEL }}
-          GITHUB_TOKEN: ${{ secrets.API_KEY }}
-          TARGET_EXTENSIONS: ${{ vars.TARGET_EXTENSIONS }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          REPO_NAME: ${{ github.event.repository.name }}
-          PULL_NUMBER: ${{ github.event.number }}
         run: |
-          python chat-gpt-pr-reviewer/.ai/io/nerdythings/github_reviewer.py
+          python -m pip install --upgrade pip
+          pip install openai requests
 
-      - name: Upload result as an artifact
-        uses: actions/upload-artifact@v4
+      - name: Get changed files
+        id: files
+        run: |
+          echo "FILES_CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})" >> $GITHUB_ENV
+
+      - name: Run PR review script
+        id: openai_review
+        run: |
+          changed_files=${{ env.FILES_CHANGED }}
+          if [ -z "$changed_files" ]; then
+            echo "No files changed."
+            echo "::set-output name=review_result::No changes detected."
+          else
+            # Convert changed files to array and pass to Python script
+            changed_files_array=($changed_files)
+          
+            # Run Python script for review, passing the OpenAI API key from secrets
+            python3 review_pr.py "${changed_files_array[@]}"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v2
         with:
-          name: AI-requests
-          path: output.txt
-          retention-days: 1
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Automated PR Review by OpenAI
+            ${{ steps.openai_review.outputs.review_result }}
