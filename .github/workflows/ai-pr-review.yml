@@ -25,7 +25,7 @@ jobs:
       - name: Get changed files
         id: files
         run: |
-          # Get the list of changed files in the PR
+          # Get the list of changed files in the PR using GitHub context
           changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
 
           if [ -z "$changed_files" ]; then
